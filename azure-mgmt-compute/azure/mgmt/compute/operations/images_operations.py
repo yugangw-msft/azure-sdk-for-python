@@ -11,13 +11,14 @@
 
 from msrest.pipeline import ClientRawResponse
 from msrestazure.azure_exceptions import CloudError
+from msrestazure.azure_operation import AzureOperationPoller
 import uuid
 
 from .. import models
 
 
-class AvailabilitySetsOperations(object):
-    """AvailabilitySetsOperations operations.
+class ImagesOperations(object):
+    """ImagesOperations operations.
 
     :param client: Client for service requests.
     :param config: Configuration of service client.
@@ -36,33 +37,30 @@ class AvailabilitySetsOperations(object):
         self.config = config
 
     def create_or_update(
-            self, resource_group_name, name, parameters, custom_headers=None, raw=False, **operation_config):
-        """Create or update an availability set.
+            self, resource_group_name, image_name, parameters, custom_headers=None, raw=False, **operation_config):
+        """Create or update an image.
 
         :param resource_group_name: The name of the resource group.
         :type resource_group_name: str
-        :param name: The name of the availability set.
-        :type name: str
-        :param parameters: Parameters supplied to the Create Availability Set
-         operation.
-        :type parameters: :class:`AvailabilitySet
-         <azure.mgmt.compute.models.AvailabilitySet>`
+        :param image_name: The name of the image.
+        :type image_name: str
+        :param parameters: Parameters supplied to the Create Image operation.
+        :type parameters: :class:`Image <azure.mgmt.compute.models.Image>`
         :param dict custom_headers: headers that will be added to the request
         :param bool raw: returns the direct response alongside the
          deserialized response
-        :param operation_config: :ref:`Operation configuration
-         overrides<msrest:optionsforoperations>`.
-        :rtype: :class:`AvailabilitySet
-         <azure.mgmt.compute.models.AvailabilitySet>`
+        :rtype:
+         :class:`AzureOperationPoller<msrestazure.azure_operation.AzureOperationPoller>`
+         instance that returns :class:`Image <azure.mgmt.compute.models.Image>`
         :rtype: :class:`ClientRawResponse<msrest.pipeline.ClientRawResponse>`
          if raw=true
         :raises: :class:`CloudError<msrestazure.azure_exceptions.CloudError>`
         """
         # Construct URL
-        url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/availabilitySets/{name}'
+        url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/images/{imageName}'
         path_format_arguments = {
             'resourceGroupName': self._serialize.url("resource_group_name", resource_group_name, 'str'),
-            'name': self._serialize.url("name", name, 'str'),
+            'imageName': self._serialize.url("image_name", image_name, 'str'),
             'subscriptionId': self._serialize.url("self.config.subscription_id", self.config.subscription_id, 'str')
         }
         url = self._client.format_url(url, **path_format_arguments)
@@ -82,52 +80,77 @@ class AvailabilitySetsOperations(object):
             header_parameters['accept-language'] = self._serialize.header("self.config.accept_language", self.config.accept_language, 'str')
 
         # Construct body
-        body_content = self._serialize.body(parameters, 'AvailabilitySet')
+        body_content = self._serialize.body(parameters, 'Image')
 
         # Construct and send request
-        request = self._client.put(url, query_parameters)
-        response = self._client.send(
-            request, header_parameters, body_content, **operation_config)
+        def long_running_send():
 
-        if response.status_code not in [200]:
-            exp = CloudError(response)
-            exp.request_id = response.headers.get('x-ms-request-id')
-            raise exp
+            request = self._client.put(url, query_parameters)
+            return self._client.send(
+                request, header_parameters, body_content, **operation_config)
 
-        deserialized = None
+        def get_long_running_status(status_link, headers=None):
 
-        if response.status_code == 200:
-            deserialized = self._deserialize('AvailabilitySet', response)
+            request = self._client.get(status_link)
+            if headers:
+                request.headers.update(headers)
+            return self._client.send(
+                request, header_parameters, **operation_config)
+
+        def get_long_running_output(response):
+
+            if response.status_code not in [200, 201]:
+                exp = CloudError(response)
+                exp.request_id = response.headers.get('x-ms-request-id')
+                raise exp
+
+            deserialized = None
+
+            if response.status_code == 200:
+                deserialized = self._deserialize('Image', response)
+            if response.status_code == 201:
+                deserialized = self._deserialize('Image', response)
+
+            if raw:
+                client_raw_response = ClientRawResponse(deserialized, response)
+                return client_raw_response
+
+            return deserialized
 
         if raw:
-            client_raw_response = ClientRawResponse(deserialized, response)
-            return client_raw_response
+            response = long_running_send()
+            return get_long_running_output(response)
 
-        return deserialized
+        long_running_operation_timeout = operation_config.get(
+            'long_running_operation_timeout',
+            self.config.long_running_operation_timeout)
+        return AzureOperationPoller(
+            long_running_send, get_long_running_output,
+            get_long_running_status, long_running_operation_timeout)
 
     def delete(
-            self, resource_group_name, availability_set_name, custom_headers=None, raw=False, **operation_config):
-        """Delete an availability set.
+            self, resource_group_name, image_name, custom_headers=None, raw=False, **operation_config):
+        """Deletes an Image.
 
         :param resource_group_name: The name of the resource group.
         :type resource_group_name: str
-        :param availability_set_name: The name of the availability set.
-        :type availability_set_name: str
+        :param image_name: The name of the image.
+        :type image_name: str
         :param dict custom_headers: headers that will be added to the request
         :param bool raw: returns the direct response alongside the
          deserialized response
-        :param operation_config: :ref:`Operation configuration
-         overrides<msrest:optionsforoperations>`.
-        :rtype: None
+        :rtype:
+         :class:`AzureOperationPoller<msrestazure.azure_operation.AzureOperationPoller>`
+         instance that returns None
         :rtype: :class:`ClientRawResponse<msrest.pipeline.ClientRawResponse>`
          if raw=true
         :raises: :class:`CloudError<msrestazure.azure_exceptions.CloudError>`
         """
         # Construct URL
-        url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/availabilitySets/{availabilitySetName}'
+        url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/images/{imageName}'
         path_format_arguments = {
             'resourceGroupName': self._serialize.url("resource_group_name", resource_group_name, 'str'),
-            'availabilitySetName': self._serialize.url("availability_set_name", availability_set_name, 'str'),
+            'imageName': self._serialize.url("image_name", image_name, 'str'),
             'subscriptionId': self._serialize.url("self.config.subscription_id", self.config.subscription_id, 'str')
         }
         url = self._client.format_url(url, **path_format_arguments)
@@ -147,48 +170,74 @@ class AvailabilitySetsOperations(object):
             header_parameters['accept-language'] = self._serialize.header("self.config.accept_language", self.config.accept_language, 'str')
 
         # Construct and send request
-        request = self._client.delete(url, query_parameters)
-        response = self._client.send(request, header_parameters, **operation_config)
+        def long_running_send():
 
-        if response.status_code not in [200, 204]:
-            exp = CloudError(response)
-            exp.request_id = response.headers.get('x-ms-request-id')
-            raise exp
+            request = self._client.delete(url, query_parameters)
+            return self._client.send(request, header_parameters, **operation_config)
+
+        def get_long_running_status(status_link, headers=None):
+
+            request = self._client.get(status_link)
+            if headers:
+                request.headers.update(headers)
+            return self._client.send(
+                request, header_parameters, **operation_config)
+
+        def get_long_running_output(response):
+
+            if response.status_code not in [202, 204]:
+                exp = CloudError(response)
+                exp.request_id = response.headers.get('x-ms-request-id')
+                raise exp
+
+            if raw:
+                client_raw_response = ClientRawResponse(None, response)
+                return client_raw_response
 
         if raw:
-            client_raw_response = ClientRawResponse(None, response)
-            return client_raw_response
+            response = long_running_send()
+            return get_long_running_output(response)
+
+        long_running_operation_timeout = operation_config.get(
+            'long_running_operation_timeout',
+            self.config.long_running_operation_timeout)
+        return AzureOperationPoller(
+            long_running_send, get_long_running_output,
+            get_long_running_status, long_running_operation_timeout)
 
     def get(
-            self, resource_group_name, availability_set_name, custom_headers=None, raw=False, **operation_config):
-        """Retrieves information about an availability set.
+            self, resource_group_name, image_name, expand=None, custom_headers=None, raw=False, **operation_config):
+        """Gets an image.
 
         :param resource_group_name: The name of the resource group.
         :type resource_group_name: str
-        :param availability_set_name: The name of the availability set.
-        :type availability_set_name: str
+        :param image_name: The name of the image.
+        :type image_name: str
+        :param expand: The expand expression to apply on the operation.
+        :type expand: str
         :param dict custom_headers: headers that will be added to the request
         :param bool raw: returns the direct response alongside the
          deserialized response
         :param operation_config: :ref:`Operation configuration
          overrides<msrest:optionsforoperations>`.
-        :rtype: :class:`AvailabilitySet
-         <azure.mgmt.compute.models.AvailabilitySet>`
+        :rtype: :class:`Image <azure.mgmt.compute.models.Image>`
         :rtype: :class:`ClientRawResponse<msrest.pipeline.ClientRawResponse>`
          if raw=true
         :raises: :class:`CloudError<msrestazure.azure_exceptions.CloudError>`
         """
         # Construct URL
-        url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/availabilitySets/{availabilitySetName}'
+        url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/images/{imageName}'
         path_format_arguments = {
             'resourceGroupName': self._serialize.url("resource_group_name", resource_group_name, 'str'),
-            'availabilitySetName': self._serialize.url("availability_set_name", availability_set_name, 'str'),
+            'imageName': self._serialize.url("image_name", image_name, 'str'),
             'subscriptionId': self._serialize.url("self.config.subscription_id", self.config.subscription_id, 'str')
         }
         url = self._client.format_url(url, **path_format_arguments)
 
         # Construct parameters
         query_parameters = {}
+        if expand is not None:
+            query_parameters['$expand'] = self._serialize.query("expand", expand, 'str')
         query_parameters['api-version'] = self._serialize.query("self.api_version", self.api_version, 'str')
 
         # Construct headers
@@ -213,7 +262,7 @@ class AvailabilitySetsOperations(object):
         deserialized = None
 
         if response.status_code == 200:
-            deserialized = self._deserialize('AvailabilitySet', response)
+            deserialized = self._deserialize('Image', response)
 
         if raw:
             client_raw_response = ClientRawResponse(deserialized, response)
@@ -221,9 +270,9 @@ class AvailabilitySetsOperations(object):
 
         return deserialized
 
-    def list(
+    def list_by_resource_group(
             self, resource_group_name, custom_headers=None, raw=False, **operation_config):
-        """Lists all availability sets in a resource group.
+        """Gets the list of images under a resource group.
 
         :param resource_group_name: The name of the resource group.
         :type resource_group_name: str
@@ -232,15 +281,14 @@ class AvailabilitySetsOperations(object):
          deserialized response
         :param operation_config: :ref:`Operation configuration
          overrides<msrest:optionsforoperations>`.
-        :rtype: :class:`AvailabilitySetPaged
-         <azure.mgmt.compute.models.AvailabilitySetPaged>`
+        :rtype: :class:`ImagePaged <azure.mgmt.compute.models.ImagePaged>`
         :raises: :class:`CloudError<msrestazure.azure_exceptions.CloudError>`
         """
         def internal_paging(next_link=None, raw=False):
 
             if not next_link:
                 # Construct URL
-                url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/availabilitySets'
+                url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/images'
                 path_format_arguments = {
                     'resourceGroupName': self._serialize.url("resource_group_name", resource_group_name, 'str'),
                     'subscriptionId': self._serialize.url("self.config.subscription_id", self.config.subscription_id, 'str')
@@ -278,41 +326,35 @@ class AvailabilitySetsOperations(object):
             return response
 
         # Deserialize response
-        deserialized = models.AvailabilitySetPaged(internal_paging, self._deserialize.dependencies)
+        deserialized = models.ImagePaged(internal_paging, self._deserialize.dependencies)
 
         if raw:
             header_dict = {}
-            client_raw_response = models.AvailabilitySetPaged(internal_paging, self._deserialize.dependencies, header_dict)
+            client_raw_response = models.ImagePaged(internal_paging, self._deserialize.dependencies, header_dict)
             return client_raw_response
 
         return deserialized
 
-    def list_available_sizes(
-            self, resource_group_name, availability_set_name, custom_headers=None, raw=False, **operation_config):
-        """Lists all available virtual machine sizes that can be used to create a
-        new virtual machine in an existing availability set.
+    def list(
+            self, custom_headers=None, raw=False, **operation_config):
+        """Gets the list of Images in the subscription. Use nextLink property in
+        the response to get the next page of Images. Do this till nextLink is
+        not null to fetch all the Images.
 
-        :param resource_group_name: The name of the resource group.
-        :type resource_group_name: str
-        :param availability_set_name: The name of the availability set.
-        :type availability_set_name: str
         :param dict custom_headers: headers that will be added to the request
         :param bool raw: returns the direct response alongside the
          deserialized response
         :param operation_config: :ref:`Operation configuration
          overrides<msrest:optionsforoperations>`.
-        :rtype: :class:`VirtualMachineSizePaged
-         <azure.mgmt.compute.models.VirtualMachineSizePaged>`
+        :rtype: :class:`ImagePaged <azure.mgmt.compute.models.ImagePaged>`
         :raises: :class:`CloudError<msrestazure.azure_exceptions.CloudError>`
         """
         def internal_paging(next_link=None, raw=False):
 
             if not next_link:
                 # Construct URL
-                url = '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/availabilitySets/{availabilitySetName}/vmSizes'
+                url = '/subscriptions/{subscriptionId}/providers/Microsoft.Compute/images'
                 path_format_arguments = {
-                    'resourceGroupName': self._serialize.url("resource_group_name", resource_group_name, 'str'),
-                    'availabilitySetName': self._serialize.url("availability_set_name", availability_set_name, 'str'),
                     'subscriptionId': self._serialize.url("self.config.subscription_id", self.config.subscription_id, 'str')
                 }
                 url = self._client.format_url(url, **path_format_arguments)
@@ -348,11 +390,11 @@ class AvailabilitySetsOperations(object):
             return response
 
         # Deserialize response
-        deserialized = models.VirtualMachineSizePaged(internal_paging, self._deserialize.dependencies)
+        deserialized = models.ImagePaged(internal_paging, self._deserialize.dependencies)
 
         if raw:
             header_dict = {}
-            client_raw_response = models.VirtualMachineSizePaged(internal_paging, self._deserialize.dependencies, header_dict)
+            client_raw_response = models.ImagePaged(internal_paging, self._deserialize.dependencies, header_dict)
             return client_raw_response
 
         return deserialized

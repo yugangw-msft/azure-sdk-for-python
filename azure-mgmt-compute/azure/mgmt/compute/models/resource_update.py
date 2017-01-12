@@ -9,5 +9,19 @@
 # regenerated.
 # --------------------------------------------------------------------------
 
-VERSION = "0.32.1-pri"
+from msrest.serialization import Model
 
+
+class ResourceUpdate(Model):
+    """The Resource model definition.
+
+    :param tags: Resource tags
+    :type tags: dict
+    """
+
+    _attribute_map = {
+        'tags': {'key': 'tags', 'type': '{str}'},
+    }
+
+    def __init__(self, tags=None):
+        self.tags = tags

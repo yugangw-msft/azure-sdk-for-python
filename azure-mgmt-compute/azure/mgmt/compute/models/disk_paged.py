@@ -9,5 +9,19 @@
 # regenerated.
 # --------------------------------------------------------------------------
 
-VERSION = "0.32.1-pri"
+from msrest.paging import Paged
 
+
+class DiskPaged(Paged):
+    """
+    A paging container for iterating over a list of Disk object
+    """
+
+    _attribute_map = {
+        'next_link': {'key': 'nextLink', 'type': 'str'},
+        'current_page': {'key': 'value', 'type': '[Disk]'}
+    }
+
+    def __init__(self, *args, **kwargs):
+
+        super(DiskPaged, self).__init__(*args, **kwargs)

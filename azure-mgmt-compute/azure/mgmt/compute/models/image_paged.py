@@ -9,5 +9,19 @@
 # regenerated.
 # --------------------------------------------------------------------------
 
-VERSION = "0.32.1-pri"
+from msrest.paging import Paged
 
+
+class ImagePaged(Paged):
+    """
+    A paging container for iterating over a list of Image object
+    """
+
+    _attribute_map = {
+        'next_link': {'key': 'nextLink', 'type': 'str'},
+        'current_page': {'key': 'value', 'type': '[Image]'}
+    }
+
+    def __init__(self, *args, **kwargs):
+
+        super(ImagePaged, self).__init__(*args, **kwargs)
