@@ -11,6 +11,7 @@
 
 from .instance_view_status import InstanceViewStatus
 from .sub_resource import SubResource
+from .sku import Sku
 from .availability_set import AvailabilitySet
 from .virtual_machine_size import VirtualMachineSize
 from .virtual_machine_extension_image import VirtualMachineExtensionImage
@@ -56,7 +57,6 @@ from .disk_instance_view import DiskInstanceView
 from .boot_diagnostics_instance_view import BootDiagnosticsInstanceView
 from .virtual_machine_instance_view import VirtualMachineInstanceView
 from .virtual_machine import VirtualMachine
-from .sku import Sku
 from .upgrade_policy import UpgradePolicy
 from .image_os_disk import ImageOSDisk
 from .image_data_disk import ImageDataDisk
@@ -91,6 +91,7 @@ from .api_error import ApiError
 from .compute_long_running_operation_properties import ComputeLongRunningOperationProperties
 from .resource import Resource
 from .sub_resource_read_only import SubResourceReadOnly
+from .operation_status_response import OperationStatusResponse
 from .container_service_custom_profile import ContainerServiceCustomProfile
 from .container_service_service_principal_profile import ContainerServiceServicePrincipalProfile
 from .container_service_orchestrator_profile import ContainerServiceOrchestratorProfile
@@ -151,6 +152,7 @@ from .compute_management_client_enums import (
 __all__ = [
     'InstanceViewStatus',
     'SubResource',
+    'Sku',
     'AvailabilitySet',
     'VirtualMachineSize',
     'VirtualMachineExtensionImage',
@@ -196,7 +198,6 @@ __all__ = [
     'BootDiagnosticsInstanceView',
     'VirtualMachineInstanceView',
     'VirtualMachine',
-    'Sku',
     'UpgradePolicy',
     'ImageOSDisk',
     'ImageDataDisk',
@@ -231,6 +232,7 @@ __all__ = [
     'ComputeLongRunningOperationProperties',
     'Resource',
     'SubResourceReadOnly',
+    'OperationStatusResponse',
     'ContainerServiceCustomProfile',
     'ContainerServiceServicePrincipalProfile',
     'ContainerServiceOrchestratorProfile',

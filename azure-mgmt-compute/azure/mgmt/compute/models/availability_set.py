@@ -41,6 +41,8 @@ class AvailabilitySet(Resource):
      <azure.mgmt.compute.models.InstanceViewStatus>`
     :param managed: If the availability set supports managed disks.
     :type managed: bool
+    :param sku: Sku of the availability set
+    :type sku: :class:`Sku <azure.mgmt.compute.models.Sku>`
     """
 
     _validation = {
@@ -62,12 +64,14 @@ class AvailabilitySet(Resource):
         'virtual_machines': {'key': 'properties.virtualMachines', 'type': '[SubResource]'},
         'statuses': {'key': 'properties.statuses', 'type': '[InstanceViewStatus]'},
         'managed': {'key': 'properties.managed', 'type': 'bool'},
+        'sku': {'key': 'sku', 'type': 'Sku'},
     }
 
-    def __init__(self, location, tags=None, platform_update_domain_count=None, platform_fault_domain_count=None, virtual_machines=None, managed=None):
+    def __init__(self, location, tags=None, platform_update_domain_count=None, platform_fault_domain_count=None, virtual_machines=None, managed=None, sku=None):
         super(AvailabilitySet, self).__init__(location=location, tags=tags)
         self.platform_update_domain_count = platform_update_domain_count
         self.platform_fault_domain_count = platform_fault_domain_count
         self.virtual_machines = virtual_machines
         self.statuses = None
         self.managed = managed
+        self.sku = sku
